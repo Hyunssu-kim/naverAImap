@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 대화</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 600px;
+            height: 80vh;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .ai-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .chat-title {
+            font-size: 18px;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin: 8px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .message a {
+            color: #6c757d;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+
+        .message a:hover {
+            color: #495057;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background: #f8f9fa;
+            color: #495057;
+            align-self: flex-end;
+            border-bottom-right-radius: 8px;
+        }
+
+        .ai-message {
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+            color: #495057;
+            align-self: flex-start;
+            border-bottom-left-radius: 8px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .message-input:focus {
+            border-color: #dee2e6;
+            background: white;
+            transform: translateY(-1px);
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .send-button:active {
+            transform: scale(0.95);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+            padding: 16px 20px;
+            border-radius: 20px;
+            border-bottom-left-radius: 8px;
+            max-width: 80px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #adb5bd;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #adb5bd;
+            font-size: 14px;
+            margin-top: 40px;
+        }
+
+        .empty-emoji {
+            font-size: 48px;
+            margin-bottom: 16px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* 스크롤바 스타일링 */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #e9ecef;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="ai-avatar">🤖</div>
+            <div class="chat-title">AI와 대화하기</div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-state">
+                <div class="empty-emoji">💬</div>
+                <div>안녕하세요! 무엇이든 물어보세요</div>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input 
+                type="text" 
+                class="message-input" 
+                id="messageInput" 
+                placeholder="메시지를 입력하세요..."
+                maxlength="500"
+            >
+            <button class="send-button" id="sendButton">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // AI 응답 예시들
+        const aiResponses = [
+            "흥미로운 질문이네요! 그것에 대해 생각해보면...",
+            "좋은 포인트입니다. 제가 도움드릴 수 있는 부분은...",
+            "그런 관점에서 보면, 다음과 같이 말씀드릴 수 있어요.",
+            "네, 맞습니다! 추가로 말씀드리면...",
+            "정말 좋은 질문이에요. 이렇게 생각해볼 수 있을 것 같아요.",
+            "아하! 그것에 대해서는 이런 답변을 드릴 수 있어요.",
+            "흠, 재미있는 주제네요. 제 생각에는...",
+            "물론이죠! 그것에 대해 자세히 설명해드릴게요.",
+            "여기 관련 이미지를 보여드릴게요:\nhttps://picsum.photos/400/300?random=1",
+            "이런 예시 이미지가 도움이 될 것 같아요!\nhttps://picsum.photos/350/250?random=2"
+        ];
+
+        function addMessage(text, isUser = false) {
+            // 첫 메시지일 때 환영 메시지 제거
+            const emptyState = chatMessages.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            
+            // 이미지 URL 감지 및 변환
+            const content = processMessageContent(text);
+            messageDiv.innerHTML = content;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function processMessageContent(text) {
+            // 이미지 URL 패턴 감지 (jpg, jpeg, png, gif, webp, svg)
+            const imageUrlPattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+            
+            // URL을 이미지 태그로 변환
+            let processedText = text.replace(imageUrlPattern, (url) => {
+                return `<img src="${url}" alt="이미지" loading="lazy" onerror="this.style.display='none'">`;
+            });
+            
+            // 일반 URL 감지 (이미지가 아닌 경우)
+            const urlPattern = /(https?:\/\/[^\s]+)/gi;
+            processedText = processedText.replace(urlPattern, (url) => {
+                // 이미 이미지로 처리된 URL은 제외
+                if (url.match(/\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?$/i)) {
+                    return url;
+                }
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+            });
+            
+            // 텍스트 줄바꿈 처리
+            processedText = processedText.replace(/\n/g, '<br>');
+            
+            return processedText;
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.id = 'currentTyping';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typing = document.getElementById('currentTyping');
+            if (typing) {
+                typing.remove();
+            }
+        }
+
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text) return;
+
+            // 사용자 메시지 추가
+            addMessage(text, true);
+            messageInput.value = '';
+            
+            // 타이핑 인디케이터 표시
+            showTypingIndicator();
+            
+            // AI 응답 시뮬레이션 (1-3초 후)
+            setTimeout(() => {
+                hideTypingIndicator();
+                const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+                addMessage(randomResponse, false);
+            }, Math.random() * 2000 + 1000);
+        }
+
+        // 이벤트 리스너
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 입력창에 포커스
+        messageInput.focus();
+    </script>
+</body>
+</html>
