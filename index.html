@@ -323,6 +323,11 @@
         }
 
         function processMessageContent(text) {
+            // text가 문자열이 아닌 경우 문자열로 변환
+            if (typeof text !== 'string') {
+                text = String(text);
+            }
+
             // 이미지 URL 패턴 감지 (jpg, jpeg, png, gif, webp, svg)
             const imageUrlPattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
 
@@ -342,7 +347,7 @@
             });
 
             // 텍스트 줄바꿈 처리
-            processedText = processedText.replace(/\n/g, '<br>');
+            processedText = processedText.replace(/\\n/g, '<br>').replace(/\n/g, '<br>');
 
             return processedText;
         }
@@ -405,10 +410,10 @@
             try {
                 const response = await fetch(LAMBDA_API_URL, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        // CORS 헤더가 필요한 경우 추가
+                        // 'Authorization': 'Bearer your-token' // API 키가 필요한 경우
                     },
                     body: JSON.stringify({
                         query: userMessage
@@ -425,10 +430,12 @@
                 if (data.body) {
                     // body가 문자열인 경우 JSON 파싱
                     const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-                    return bodyData.ai_response || bodyData.message || bodyData;
+                    // answer 필드 반환 (문자열로 확실히 반환)
+                    return String(bodyData.answer || bodyData.ai_response || bodyData.message || bodyData);
                 }
 
-                return data.ai_response || data.message || data.response || data;
+                // 직접 응답인 경우
+                return String(data.answer || data.ai_response || data.message || data.response || data);
 
             } catch (error) {
                 console.error('Lambda API 호출 오류:', error);
