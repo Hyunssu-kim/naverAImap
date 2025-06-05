@@ -269,7 +269,7 @@
     <div class="chat-container">
         <div class="chat-header">
             <div class="ai-avatar">🤖</div>
-            <div class="chat-title">AI와 대화하기</div>
+            <div class="chat-title">Food AI와 대화하기</div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
@@ -328,22 +328,26 @@
                 text = String(text);
             }
 
-            // 이미지 URL 패턴 감지 (jpg, jpeg, png, gif, webp, svg)
-            const imageUrlPattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+            // 더 포괄적인 이미지 URL 패턴 감지
+            const imageUrlPattern = /(https?:\/\/[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:[^\s<>"]*)?)/gi;
 
             // URL을 이미지 태그로 변환
             let processedText = text.replace(imageUrlPattern, (url) => {
-                return `<img src="${url}" alt="이미지" loading="lazy" onerror="this.style.display='none'">`;
+                // URL 끝의 불필요한 문자들 제거
+                const cleanUrl = url.replace(/[,;]$/, '');
+                return `<img src="${cleanUrl}" alt="이미지" loading="lazy" onerror="this.style.display='none'" style="max-width: 300px; margin: 5px 0; border-radius: 8px;">`;
             });
 
-            // 일반 URL 감지 (이미지가 아닌 경우)
-            const urlPattern = /(https?:\/\/[^\s]+)/gi;
+            // 일반 URL 감지 (이미지가 아닌 경우) - 더 엄격한 패턴 사용
+            const urlPattern = /(https?:\/\/[^\s<>"]+)/gi;
             processedText = processedText.replace(urlPattern, (url) => {
                 // 이미 이미지로 처리된 URL은 제외
-                if (url.match(/\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?$/i)) {
+                if (url.match(/\.(?:jpg|jpeg|png|gif|webp|svg)(?:[^\s<>"]*)?$/i)) {
                     return url;
                 }
-                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+                // URL 끝의 불필요한 문자들 제거
+                const cleanUrl = url.replace(/[,;]$/, '');
+                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer">${cleanUrl}</a>`;
             });
 
             // 텍스트 줄바꿈 처리
