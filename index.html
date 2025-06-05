@@ -269,13 +269,13 @@
     <div class="chat-container">
         <div class="chat-header">
             <div class="ai-avatar">🤖</div>
-            <div class="chat-title">Food AI와 대화하기</div>
+            <div class="chat-title">여의도 AI와 대화하기</div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
             <div class="empty-state">
                 <div class="empty-emoji">💬</div>
-                <div>안녕하세요! 무엇이든 물어보세요</div>
+                <div>안녕하세요! 여의도 음식점만 물어보세요</div>
             </div>
         </div>
 
@@ -335,7 +335,7 @@
             let processedText = text.replace(imageUrlPattern, (url) => {
                 // URL 끝의 불필요한 문자들 제거
                 const cleanUrl = url.replace(/[,;]$/, '');
-                return `<img src="${cleanUrl}" alt="이미지" loading="lazy" onerror="this.style.display='none'" style="max-width: 300px; margin: 5px 0; border-radius: 8px;">`;
+                return `<img src="${cleanUrl}" alt="이미지" loading="lazy" onerror="this.style.display='none'" style="max-width: 150px; max-height: 120px; margin: 3px 5px; border-radius: 6px; object-fit: cover; vertical-align: top;">`;
             });
 
             // 일반 URL 감지 (이미지가 아닌 경우) - 더 엄격한 패턴 사용
