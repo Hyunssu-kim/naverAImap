@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 대화</title>
+    <title>여의도 맛집 검색</title>
     <style>
         * {
             margin: 0;
@@ -81,28 +81,6 @@
             animation: slideIn 0.3s ease-out;
         }
 
-        .message img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 12px;
-            margin: 8px 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .message a {
-            color: #6c757d;
-            text-decoration: underline;
-            word-break: break-all;
-        }
-
-        .message a:hover {
-            color: #495057;
-        }
-
-        .message-content {
-            word-wrap: break-word;
-        }
-
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -120,6 +98,31 @@
             color: #495057;
             align-self: flex-start;
             border-bottom-left-radius: 8px;
+        }
+
+        .restaurant-card {
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+        }
+
+        .restaurant-name {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 4px;
+        }
+
+        .restaurant-category {
+            color: #6c757d;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .restaurant-score {
+            color: #28a745;
+            font-size: 12px;
         }
 
         .input-container {
@@ -221,7 +224,6 @@
             60% { transform: translateY(-5px); }
         }
 
-        /* 스크롤바 스타일링 */
         .chat-messages::-webkit-scrollbar {
             width: 6px;
         }
@@ -243,23 +245,23 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            <div class="ai-avatar">🤖</div>
-            <div class="chat-title">AI와 대화하기</div>
+            <div class="ai-avatar">🍽️</div>
+            <div class="chat-title">여의도 맛집 검색</div>
         </div>
-        
+
         <div class="chat-messages" id="chatMessages">
             <div class="empty-state">
-                <div class="empty-emoji">💬</div>
-                <div>안녕하세요! 무엇이든 물어보세요</div>
+                <div class="empty-emoji">🍽️</div>
+                <div>여의도 맛집을 찾아드릴게요!<br>예: "중식당 추천해줘", "짬뽕 먹을 곳"</div>
             </div>
         </div>
-        
+
         <div class="input-container">
-            <input 
-                type="text" 
-                class="message-input" 
-                id="messageInput" 
-                placeholder="메시지를 입력하세요..."
+            <input
+                type="text"
+                class="message-input"
+                id="messageInput"
+                placeholder="맛집 검색어를 입력하세요... (예: 중식당, 갈비찜)"
                 maxlength="500"
             >
             <button class="send-button" id="sendButton">
@@ -273,22 +275,10 @@
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
 
-        // AI 응답 예시들
-        const aiResponses = [
-            "흥미로운 질문이네요! 그것에 대해 생각해보면...",
-            "좋은 포인트입니다. 제가 도움드릴 수 있는 부분은...",
-            "그런 관점에서 보면, 다음과 같이 말씀드릴 수 있어요.",
-            "네, 맞습니다! 추가로 말씀드리면...",
-            "정말 좋은 질문이에요. 이렇게 생각해볼 수 있을 것 같아요.",
-            "아하! 그것에 대해서는 이런 답변을 드릴 수 있어요.",
-            "흠, 재미있는 주제네요. 제 생각에는...",
-            "물론이죠! 그것에 대해 자세히 설명해드릴게요.",
-            "여기 관련 이미지를 보여드릴게요:\nhttps://picsum.photos/400/300?random=1",
-            "이런 예시 이미지가 도움이 될 것 같아요!\nhttps://picsum.photos/350/250?random=2"
-        ];
+        // AWS Lambda API 설정 - 실제 URL로 교체하세요
+        const LAMBDA_API_URL = 'https://your-api-gateway-url.execute-api.ap-northeast-2.amazonaws.com/prod/search';
 
-        function addMessage(text, isUser = false) {
-            // 첫 메시지일 때 환영 메시지 제거
+        function addMessage(text, isUser = false, data = null) {
             const emptyState = chatMessages.querySelector('.empty-state');
             if (emptyState) {
                 emptyState.remove();
@@ -296,38 +286,37 @@
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-            
-            // 이미지 URL 감지 및 변환
-            const content = processMessageContent(text);
-            messageDiv.innerHTML = content;
-            
+
+            if (isUser) {
+                messageDiv.innerHTML = text;
+            } else {
+                // AI 응답 포맷팅
+                let content = '';
+
+                if (data && data.result && data.result.results) {
+                    content += `<div style="margin-bottom: 12px;">`;
+                    content += `🔍 <strong>${data.query}</strong> 검색 결과<br>`;
+                    content += `📊 총 ${data.total_found}개 식당 발견<br>`;
+                    content += `🤖 AI 선택: ${data.ai_action}</div>`;
+
+                    data.result.results.forEach((restaurant, index) => {
+                        content += `
+                            <div class="restaurant-card">
+                                <div class="restaurant-name">${index + 1}. ${restaurant.name}</div>
+                                <div class="restaurant-category">📍 ${restaurant.category}</div>
+                                ${restaurant.score ? `<div class="restaurant-score">⭐ 점수: ${restaurant.score}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                } else {
+                    content = text;
+                }
+
+                messageDiv.innerHTML = content;
+            }
+
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function processMessageContent(text) {
-            // 이미지 URL 패턴 감지 (jpg, jpeg, png, gif, webp, svg)
-            const imageUrlPattern = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
-            
-            // URL을 이미지 태그로 변환
-            let processedText = text.replace(imageUrlPattern, (url) => {
-                return `<img src="${url}" alt="이미지" loading="lazy" onerror="this.style.display='none'">`;
-            });
-            
-            // 일반 URL 감지 (이미지가 아닌 경우)
-            const urlPattern = /(https?:\/\/[^\s]+)/gi;
-            processedText = processedText.replace(urlPattern, (url) => {
-                // 이미 이미지로 처리된 URL은 제외
-                if (url.match(/\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?$/i)) {
-                    return url;
-                }
-                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-            });
-            
-            // 텍스트 줄바꿈 처리
-            processedText = processedText.replace(/\n/g, '<br>');
-            
-            return processedText;
         }
 
         function showTypingIndicator() {
@@ -341,6 +330,7 @@
                     <div class="dot"></div>
                 </div>
             `;
+            typingDiv.style.display = 'block';
             chatMessages.appendChild(typingDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -352,34 +342,81 @@
             }
         }
 
-        function sendMessage() {
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'message ai-message';
+            errorDiv.style.background = 'linear-gradient(135deg, #ffe6e6 0%, #ffebee 100%)';
+            errorDiv.style.color = '#d32f2f';
+            errorDiv.innerHTML = `❌ ${message}`;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function callLambdaAPI(userMessage) {
+            try {
+                const response = await fetch(LAMBDA_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: userMessage  // 맛집 검색용 필드명
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+
+            } catch (error) {
+                console.error('Lambda API 호출 오류:', error);
+                throw error;
+            }
+        }
+
+        async function sendMessage() {
             const text = messageInput.value.trim();
             if (!text) return;
 
-            // 사용자 메시지 추가
+            sendButton.disabled = true;
+            sendButton.style.opacity = '0.6';
+
             addMessage(text, true);
             messageInput.value = '';
-            
-            // 타이핑 인디케이터 표시
+
             showTypingIndicator();
-            
-            // AI 응답 시뮬레이션 (1-3초 후)
-            setTimeout(() => {
+
+            try {
+                const response = await callLambdaAPI(text);
                 hideTypingIndicator();
-                const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-                addMessage(randomResponse, false);
-            }, Math.random() * 2000 + 1000);
+
+                if (response.error) {
+                    showError(response.error);
+                } else {
+                    addMessage('', false, response);
+                }
+
+            } catch (error) {
+                hideTypingIndicator();
+                showError('서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+                console.error('API 오류:', error);
+            } finally {
+                sendButton.disabled = false;
+                sendButton.style.opacity = '1';
+            }
         }
 
-        // 이벤트 리스너
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 sendMessage();
             }
         });
 
-        // 입력창에 포커스
         messageInput.focus();
     </script>
 </body>
