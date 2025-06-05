@@ -468,7 +468,6 @@
             }
         }
 
-        // 이벤트 리스너
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -477,7 +476,6 @@
             }
         });
 
-        // 입력창에 포커스
         messageInput.focus();
     </script>
 </body>
