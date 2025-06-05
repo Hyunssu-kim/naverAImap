@@ -269,13 +269,13 @@
     <div class="chat-container">
         <div class="chat-header">
             <div class="ai-avatar">🤖</div>
-            <div class="chat-title">여의도 AI와 대화하기</div>
+            <div class="chat-title">AI와 대화하기</div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
             <div class="empty-state">
                 <div class="empty-emoji">💬</div>
-                <div>안녕하세요! 여의도 음식점만 물어보세요</div>
+                <div>안녕하세요! 무엇이든 물어보세요</div>
             </div>
         </div>
 
@@ -327,6 +327,9 @@
             if (typeof text !== 'string') {
                 text = String(text);
             }
+
+            // 마크다운 스타일 굵게 처리 (**텍스트**)
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
             // 더 포괄적인 이미지 URL 패턴 감지
             const imageUrlPattern = /(https?:\/\/[^\s<>"]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:[^\s<>"]*)?)/gi;
