@@ -269,13 +269,13 @@
     <div class="chat-container">
         <div class="chat-header">
             <div class="ai-avatar">🤖</div>
-            <div class="chat-title">여의도 음식 추천AI</div>
+            <div class="chat-title">AI와 대화하기</div>
         </div>
 
         <div class="chat-messages" id="chatMessages">
             <div class="empty-state">
                 <div class="empty-emoji">💬</div>
-                <div>안녕하세요! 여의도 음식점만 알고있어요!.</div>
+                <div>안녕하세요! 무엇이든 물어보세요</div>
             </div>
         </div>
 
@@ -405,10 +405,10 @@
             try {
                 const response = await fetch(LAMBDA_API_URL, {
                     method: 'POST',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        // CORS 헤더가 필요한 경우 추가
-                        // 'Authorization': 'Bearer your-token' // API 키가 필요한 경우
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         query: userMessage
